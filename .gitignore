@@ -1,0 +1,10 @@
+.env
+outputs/
+__pycache__/
+.venv/
+*.pyc
+*.pyo
+.pytest_cache/
+dist/
+*.egg-info/
+*.pdf
