@@ -57,13 +57,16 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked
 - **Status:** [x]
 - **Satisfies:** REQ-003
 - **Depends on:** T-003
-- **Files:** `src/epi_annotation/extract.py`
+- **Files:** `src/epi_annotation/extract.py`, `src/epi_annotation/cli.py`
 - **Do:** Implement `extract_text(doc, cfg, run_dir)`: if cached text exists under
   `run_dir/cache/text/<document>.txt` return it; else extract via PyMuPDF (or `pdftotext` when
   `extractor == "pdftotext"`), truncate to `max_chars` if set, write the cache, return text. Raise a
   clear error if extracted text is empty.
+  Also wired as `epi-annotate extract [--config PATH] [--out-dir DIR]` for manual extraction runs
+  outside of the full annotation pipeline.
 - **Accept:** Running on one real bulletin PDF returns non-empty text and creates the cache file; a
   second call reads from cache (no re-extraction); empty-text input raises a descriptive error.
+  `uv run epi-annotate extract` processes all PDFs in `data_dirs` and prints per-document results.
 
 ## T-005 — Provider client factory
 - **Status:** [ ]

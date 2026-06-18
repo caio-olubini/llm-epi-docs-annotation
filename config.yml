@@ -1,6 +1,6 @@
 input:
-  data_dirs: [data/raw/golden_standard_base]
-  glob: "*.pdf"
+  data_dirs: [data/raw/dengue_related]
+  glob: "**/*.pdf"
 
 pdf:
   extractor: pymupdf
