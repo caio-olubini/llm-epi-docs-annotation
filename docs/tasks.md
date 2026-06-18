@@ -69,7 +69,7 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked
   `uv run epi-annotate extract` processes all PDFs in `data_dirs` and prints per-document results.
 
 ## T-005 — Provider client factory
-- **Status:** [ ]
+- **Status:** [x]
 - **Satisfies:** REQ-002, REQ-005
 - **Depends on:** T-003
 - **Files:** `src/epi_annotation/models.py`
@@ -81,7 +81,7 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked
   unset, it raises the named error and never logs the key value.
 
 ## T-006 — Annotate one document with one model
-- **Status:** [ ]
+- **Status:** [x]
 - **Satisfies:** REQ-004, REQ-005, REQ-007
 - **Depends on:** T-002, T-005
 - **Files:** `src/epi_annotation/annotate.py`, `src/epi_annotation/prompts/system.md`
@@ -131,8 +131,31 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked
 - **Do:** Implement `main()` with subcommands: `run` (load config → `runner.run(cfg)`),
   `resume <run_id>` (resolve dir → `runner.run(cfg, run_dir)`), `status <run_id>` (print
   `status_counts`), `list-runs` (list run dirs under `output_dir`, newest first). Clear exit codes.
+  Also includes `extract` (T-004) and `demo` (see below) subcommands already implemented.
 - **Accept:** `uv run epi-annotate run|resume <id>|status <id>|list-runs` each perform their function;
   `status` prints done/failed/pending matching disk.
+
+### `demo` subcommand (implemented ahead of T-009)
+Annotates a single pre-extracted `.txt` file with one model and writes the result JSON to a
+dedicated output directory. Useful for manual testing without running the full pipeline.
+
+```
+uv run epi-annotate demo <TEXT_FILE> [--config PATH] [--model NAME] [--out-dir DIR]
+```
+
+- `TEXT_FILE` — path to a pre-extracted `.txt` file (e.g. from `epi-annotate extract`)
+- `--model` — name of a model from `config.yml` (default: first model listed)
+- `--out-dir` — destination directory (default: `outputs/demo`)
+
+Output file: `<out-dir>/<document_stem>__<model_name>.json`
+
+Example:
+```bash
+uv run epi-annotate demo \
+  outputs/extract/cache/text/boletim_epidemiologico_svs_20.txt \
+  --model claude-sonnet \
+  --out-dir outputs/demo
+```
 
 ## T-010 — Tests for the trust-critical paths
 - **Status:** [ ]

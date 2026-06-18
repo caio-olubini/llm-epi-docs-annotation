@@ -9,6 +9,7 @@ class Disease(str, Enum):
     chikungunya = "chikungunya"
     zika = "zika"
     febre_amarela = "febre_amarela"
+    sarampo = "sarampo"
     outro = "outro"
 
 
