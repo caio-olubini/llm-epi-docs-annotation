@@ -1,18 +1,22 @@
 import pytest
 from pydantic import ValidationError
 
-from epi_annotation.schema import Disease, DocumentAnnotation, EpiObservation, LocationLevel
+from epi_annotation.schema import (
+    AlertLevel, Disease, DocumentAnnotation, LocationLevel,
+    SignalRow, Trend, VsExpected,
+)
 
 
-VALID_OBSERVATION = {
+VALID_SIGNAL = {
     "disease": "dengue",
     "location_name": "Brasil",
     "location_level": "national",
+    "trend": "decrease",
 }
 
 VALID_DOCUMENT = {
     "diseases_covered": ["dengue", "zika"],
-    "observations": [VALID_OBSERVATION],
+    "signals": [VALID_SIGNAL],
 }
 
 
@@ -23,53 +27,57 @@ def test_document_annotation_parses_with_all_optional_fields_null():
         "publication_date": None,
         "bulletin_volume": None,
         "bulletin_number": None,
-        "observations": [],
+        "signals": [],
     })
     assert doc.diseases_covered == [Disease.dengue]
     assert doc.reference_year is None
-    assert doc.observations == []
+    assert doc.signals == []
 
 
-def test_document_annotation_parses_full_observation():
+def test_document_annotation_parses_full_signal():
     doc = DocumentAnnotation.model_validate(VALID_DOCUMENT)
-    obs = doc.observations[0]
-    assert obs.disease == Disease.dengue
-    assert obs.location_level == LocationLevel.national
-    assert obs.probable_cases is None
+    sig = doc.signals[0]
+    assert sig.disease == Disease.dengue
+    assert sig.location_level == LocationLevel.national
+    assert sig.probable_cases is None
 
 
-def test_observation_missing_disease_raises_validation_error():
+def test_signal_missing_disease_raises_validation_error():
     with pytest.raises(ValidationError) as exc_info:
-        EpiObservation.model_validate({
+        SignalRow.model_validate({
             "location_name": "Brasil",
             "location_level": "national",
+            "trend": "decrease",
         })
     errors = exc_info.value.errors()
     assert any(e["loc"] == ("disease",) for e in errors)
 
 
-def test_observation_invalid_disease_enum_raises_validation_error():
+def test_signal_invalid_disease_enum_raises_validation_error():
     with pytest.raises(ValidationError):
-        EpiObservation.model_validate({
-            **VALID_OBSERVATION,
+        SignalRow.model_validate({
+            **VALID_SIGNAL,
             "disease": "malaria",
         })
 
 
 def test_document_annotation_missing_diseases_covered_raises_validation_error():
     with pytest.raises(ValidationError) as exc_info:
-        DocumentAnnotation.model_validate({"observations": []})
+        DocumentAnnotation.model_validate({"signals": []})
     errors = exc_info.value.errors()
     assert any(e["loc"] == ("diseases_covered",) for e in errors)
 
 
-def test_observation_optional_numeric_fields_accept_null():
-    obs = EpiObservation.model_validate({
-        **VALID_OBSERVATION,
+def test_signal_optional_numeric_fields_accept_null():
+    sig = SignalRow.model_validate({
+        **VALID_SIGNAL,
         "probable_cases": None,
-        "confirmed_cases": None,
-        "deaths": None,
         "incidence_per_100k": None,
     })
-    assert obs.probable_cases is None
-    assert obs.incidence_per_100k is None
+    assert sig.probable_cases is None
+    assert sig.incidence_per_100k is None
+
+
+def test_sarampo_is_valid_disease():
+    sig = SignalRow.model_validate({**VALID_SIGNAL, "disease": "sarampo"})
+    assert sig.disease == Disease.sarampo

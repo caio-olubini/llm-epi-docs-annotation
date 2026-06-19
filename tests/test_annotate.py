@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 from epi_annotation.annotate import AnnotateResult, annotate, _extract_token_usage
 from epi_annotation.config import ModelCfg
-from epi_annotation.schema import Disease, DocumentAnnotation, LocationLevel, EpiObservation
+from epi_annotation.schema import Disease, DocumentAnnotation, LocationLevel, SignalRow, Trend
 
 
 def make_model_cfg(max_tokens=None):
@@ -14,11 +14,12 @@ def make_model_cfg(max_tokens=None):
 def make_valid_annotation():
     return DocumentAnnotation(
         diseases_covered=[Disease.dengue],
-        observations=[
-            EpiObservation(
+        signals=[
+            SignalRow(
                 disease=Disease.dengue,
                 location_name="Brasil",
                 location_level=LocationLevel.national,
+                trend=Trend.stable,
             )
         ],
     )
