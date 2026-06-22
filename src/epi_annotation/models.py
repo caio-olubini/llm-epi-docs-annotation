@@ -37,7 +37,7 @@ def build_client(model_cfg: ModelCfg) -> instructor.Instructor:
     # JSON mode asks the model to emit the schema as JSON in the response body.
     # The default TOOLS (function-calling) mode is unreliable on Gemini's
     # OpenAI-compat endpoint for large nested schemas (MALFORMED_FUNCTION_CALL).
-    return instructor.from_openai(raw_client, mode=instructor.Mode.JSON)
+    return instructor.from_openai(raw_client, mode=instructor.Mode.JSON_SCHEMA)
 
 
 def _require_api_key(provider: str) -> str:

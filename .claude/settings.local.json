@@ -4,7 +4,9 @@
       "Bash(mkdir -p .claude/skills/coding-philosophy)",
       "Bash(git mv *)",
       "Bash(mv docs/philosophy.md .claude/skills/coding-philosophy/SKILL.md)",
-      "Bash(uv sync *)"
+      "Bash(uv sync *)",
+      "Skill(claude-api)",
+      "Skill(claude-api:*)"
     ]
   }
 }

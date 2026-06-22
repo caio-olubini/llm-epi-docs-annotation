@@ -60,7 +60,7 @@ class SignalRow(BaseModel):
 class DocumentAnnotation(BaseModel):
     diseases_covered: list[Disease]
     reference_year: int | None = None
-    publication_date: date | None = None
+    publication_date: str | None = Field(None, description="ISO date YYYY-MM-DD")
     bulletin_volume: str | None = None
     bulletin_number: str | None = None
     epi_week_end: int | None = Field(None, description="Última SE coberta pelo boletim.")
