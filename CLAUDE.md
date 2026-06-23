@@ -25,12 +25,14 @@ src/epi_annotation/
   __init__.py
   cli.py          # argparse entrypoint — all subcommands
   config.py       # Config Pydantic model, load_config(), discover_documents()
-  schema.py       # Disease/LocationLevel enums, EpiObservation, DocumentAnnotation
+  schema.py       # Disease/Trend/Severity/Serotype/Intervention enums, SignalRow, DocumentAnnotation
   extract.py      # extract_text() — PyMuPDF/pdftotext + cache
   models.py       # build_client() — instructor-wrapped OpenAI/Anthropic/Google clients
   annotate.py     # annotate() → AnnotateResult (annotation + token usage)
+  fingerprint.py  # fingerprint_prompt() → PromptFingerprint (version + path + sha256)
+  _tasks.py       # run_tests() — backs the `uv run test` script
   prompts/
-    system.md     # Portuguese system prompt sent to every model
+    system.md     # Portuguese system prompt (prompt version "v1") sent to every model
   # ledger.py     (T-007, pending)
   # runner.py     (T-008, pending)
 tests/
@@ -39,6 +41,7 @@ tests/
   test_extract.py
   test_models.py
   test_annotate.py
+  test_fingerprint.py
 ```
 
 ## Implemented tasks
@@ -57,6 +60,17 @@ tests/
 | T-010 | pending | trust-critical path tests (ledger, resume) |
 | T-011 | pending | README |
 
+## Running tests
+
+```bash
+uv run test                      # whole suite
+uv run test -k fingerprint       # extra args forward to pytest
+uv run test tests/test_config.py
+```
+
+`test` is a project script backed by `_tasks.py:run_tests`, which shells out to `pytest`
+and forwards any arguments.
+
 ## CLI subcommands
 
 ```bash
@@ -66,7 +80,7 @@ uv run epi-annotate --help
 uv run epi-annotate extract [--config config.yml] [--out-dir outputs/extract]
 
 # Annotate a single pre-extracted text file (for manual testing / demos)
-uv run epi-annotate demo <TEXT_FILE> [--config config.yml] [--model NAME] [--out-dir outputs/demo]
+uv run epi-annotate demo <TEXT_FILE> [--config config.yml] [--model NAME] [--prompt VERSION] [--out-dir outputs/demo]
 
 # Full pipeline (T-009, not yet implemented)
 uv run epi-annotate run
@@ -81,12 +95,48 @@ uv run epi-annotate list-runs
 uv run epi-annotate demo \
   outputs/extract/cache/text/boletim_epidemiologico_svs_20.txt \
   --model claude-sonnet \
+  --prompt v1 \
   --out-dir outputs/demo
 ```
 
-Output: `outputs/demo/boletim_epidemiologico_svs_20__claude-sonnet.json`
+Output: `outputs/demo/boletim_epidemiologico_svs_20__claude-sonnet__v1.json`
+
+The output is a record wrapping the annotation with its provenance:
+
+```json
+{
+  "document_id": "boletim_epidemiologico_svs_20",
+  "model": "claude-sonnet",
+  "prompt_version": "v1",
+  "prompt_path": "src/epi_annotation/prompts/system.md",
+  "prompt_sha256": "…",
+  "annotation": { /* DocumentAnnotation */ }
+}
+```
+
+## Prompt versioning
+
+Prompts are named in `config.yml` under `prompt.versions` (name → path); `prompt.active`
+selects which one a run uses. `load_config` rejects an `active` that names no known version.
+
+```yaml
+prompt:
+  active: v1
+  versions:
+    v1: src/epi_annotation/prompts/system.md
+    # v2: src/epi_annotation/prompts/system_v2.md
+```
+
+`fingerprint.py:fingerprint_prompt(version, path)` returns the version name, path, and a
+sha256 of the prompt **content** — so editing a prompt in place without renaming the version
+is still detectable when comparing outputs. Every annotation output carries this fingerprint.
+`demo --prompt VERSION` overrides `prompt.active` for one-off comparisons.
 
 ## Key invariants (don't break these)
+
+- **Annotation provenance is wrapper metadata, never in `DocumentAnnotation`** — `prompt_version`
+  / `prompt_sha256` etc. live in the output record around the annotation, never as schema fields,
+  so they are pipeline-known facts and are never sent to or filled by the model.
 
 - **"Done" is defined by the validated output file**, never by the log alone (`ledger.is_done`
   re-parses the JSON into `DocumentAnnotation`). A corrupt file means not done.

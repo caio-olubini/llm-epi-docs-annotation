@@ -66,7 +66,7 @@ def test_build_client_returns_instructor_client_when_key_is_set():
 
     import instructor
     mock_openai.assert_called_once_with(api_key="sk-fake", base_url=None)
-    mock_from_openai.assert_called_once_with(mock_openai.return_value, mode=instructor.Mode.JSON)
+    mock_from_openai.assert_called_once_with(mock_openai.return_value, mode=instructor.Mode.JSON_SCHEMA)
     assert result is mock_instructor
 
 

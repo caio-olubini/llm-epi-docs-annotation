@@ -7,9 +7,9 @@ pdf:
   max_chars: 60000
 
 models:
-  - name: gpt-4o
+  - name: gpt-4.1-mini
     provider: openai
-    model_id: gpt-4o
+    model_id: gpt-4.1-mini
     temperature: 0
     max_tokens: 4096
     input_cost_per_1k: 0.005
@@ -29,4 +29,6 @@ run:
   output_dir: outputs/runs
 
 prompt:
-  system_path: src/epi_annotation/prompts/system.md
+  active: v1
+  versions:
+    v1: src/epi_annotation/prompts/system.md

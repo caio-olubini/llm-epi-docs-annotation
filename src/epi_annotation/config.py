@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, model_validator
 
 
 class InputCfg(BaseModel):
@@ -35,7 +35,23 @@ class RunCfg(BaseModel):
 
 
 class PromptCfg(BaseModel):
-    system_path: str
+    """Named prompt versions plus which one this run uses.
+
+    Versioning lets an experiment's output carry the exact prompt it was produced
+    with (see fingerprint.py), so results stay comparable across prompt edits.
+    """
+    active: str
+    versions: dict[str, str]
+
+    @model_validator(mode="after")
+    def active_must_be_a_known_version(self) -> "PromptCfg":
+        if self.active not in self.versions:
+            known = ", ".join(self.versions) or "(none)"
+            raise ValueError(f"active prompt '{self.active}' not in versions: {known}")
+        return self
+
+    def active_path(self) -> str:
+        return self.versions[self.active]
 
 
 class Config(BaseModel):

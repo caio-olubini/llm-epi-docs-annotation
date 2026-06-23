@@ -2,16 +2,15 @@ import pytest
 from pydantic import ValidationError
 
 from epi_annotation.schema import (
-    AlertLevel, Disease, DocumentAnnotation, LocationLevel,
-    SignalRow, Trend, VsExpected,
+    Disease, DocumentAnnotation, LocationLevel, SignalRow, Trend,
 )
 
 
 VALID_SIGNAL = {
     "disease": "dengue",
     "location_name": "Brasil",
-    "location_level": "national",
-    "trend": "decrease",
+    "location_level": "nacional",
+    "trend": "queda",
 }
 
 VALID_DOCUMENT = {
@@ -39,15 +38,14 @@ def test_document_annotation_parses_full_signal():
     sig = doc.signals[0]
     assert sig.disease == Disease.dengue
     assert sig.location_level == LocationLevel.national
-    assert sig.probable_cases is None
 
 
 def test_signal_missing_disease_raises_validation_error():
     with pytest.raises(ValidationError) as exc_info:
         SignalRow.model_validate({
             "location_name": "Brasil",
-            "location_level": "national",
-            "trend": "decrease",
+            "location_level": "nacional",
+            "trend": "queda",
         })
     errors = exc_info.value.errors()
     assert any(e["loc"] == ("disease",) for e in errors)
@@ -66,16 +64,6 @@ def test_document_annotation_missing_diseases_covered_raises_validation_error():
         DocumentAnnotation.model_validate({"signals": []})
     errors = exc_info.value.errors()
     assert any(e["loc"] == ("diseases_covered",) for e in errors)
-
-
-def test_signal_optional_numeric_fields_accept_null():
-    sig = SignalRow.model_validate({
-        **VALID_SIGNAL,
-        "probable_cases": None,
-        "incidence_per_100k": None,
-    })
-    assert sig.probable_cases is None
-    assert sig.incidence_per_100k is None
 
 
 def test_sarampo_is_valid_disease():

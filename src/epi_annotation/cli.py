@@ -6,6 +6,7 @@ from pathlib import Path
 from epi_annotation.annotate import annotate
 from epi_annotation.config import load_config, discover_documents, ModelCfg
 from epi_annotation.extract import extract_text
+from epi_annotation.fingerprint import fingerprint_prompt
 
 
 def main() -> None:
@@ -43,6 +44,10 @@ def main() -> None:
         help="Model name from config to use (default: first model in config)",
     )
     demo_parser.add_argument(
+        "--prompt", default=None, metavar="VERSION",
+        help="Prompt version from config to use (default: prompt.active in config)",
+    )
+    demo_parser.add_argument(
         "--out-dir", default="outputs/demo", metavar="DIR",
         help="Directory to write the annotation JSON (default: outputs/demo)",
     )
@@ -67,7 +72,7 @@ def main() -> None:
         sys.exit(0)
 
     if args.command == "demo":
-        _run_demo(args.text_file, args.config, args.model, args.out_dir)
+        _run_demo(args.text_file, args.config, args.model, args.prompt, args.out_dir)
         return
 
     if args.command == "extract":
@@ -79,7 +84,13 @@ def main() -> None:
     sys.exit(1)
 
 
-def _run_demo(text_file: str, config_path: str, model_name: str | None, out_dir: str) -> None:
+def _run_demo(
+    text_file: str,
+    config_path: str,
+    model_name: str | None,
+    prompt_version: str | None,
+    out_dir: str,
+) -> None:
     text_path = Path(text_file)
     if not text_path.exists():
         print(f"Text file not found: {text_file}", file=sys.stderr)
@@ -87,22 +98,32 @@ def _run_demo(text_file: str, config_path: str, model_name: str | None, out_dir:
 
     cfg = load_config(config_path)
     model_cfg = _select_model(cfg.models, model_name)
-    system_prompt = Path(cfg.prompt.system_path).read_text(encoding="utf-8")
+    version = prompt_version or cfg.prompt.active
+    prompt_path = _select_prompt_path(cfg.prompt.versions, version)
+    fingerprint = fingerprint_prompt(version, prompt_path)
+    system_prompt = Path(prompt_path).read_text(encoding="utf-8")
 
     print(f"Document : {text_path.stem}")
     print(f"Model    : {model_cfg.name} ({model_cfg.model_id})")
+    print(f"Prompt   : {fingerprint.version} ({fingerprint.sha256[:8]})")
     print(f"Output   : {out_dir}/")
     print()
 
     text = text_path.read_text(encoding="utf-8")
     result = annotate(text, model_cfg, system_prompt)
 
-    out_path = Path(out_dir) / f"{text_path.stem}__{model_cfg.name}.json"
+    record = {
+        "document_id": text_path.stem,
+        "model": model_cfg.name,
+        "prompt_version": fingerprint.version,
+        "prompt_path": fingerprint.path,
+        "prompt_sha256": fingerprint.sha256,
+        "annotation": result.annotation.model_dump(mode="json"),
+    }
+
+    out_path = Path(out_dir) / f"{text_path.stem}__{model_cfg.name}__{fingerprint.version}.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(
-        result.annotation.model_dump_json(indent=2),
-        encoding="utf-8",
-    )
+    out_path.write_text(json.dumps(record, indent=2, ensure_ascii=False), encoding="utf-8")
 
     print(f"Annotation written → {out_path}")
     if result.input_tokens is not None:
@@ -117,6 +138,14 @@ def _select_model(models: list[ModelCfg], name: str | None) -> ModelCfg:
             return model
     available = ", ".join(m.name for m in models)
     print(f"Model '{name}' not found in config. Available: {available}", file=sys.stderr)
+    sys.exit(1)
+
+
+def _select_prompt_path(versions: dict[str, str], name: str) -> str:
+    if name in versions:
+        return versions[name]
+    available = ", ".join(versions)
+    print(f"Prompt version '{name}' not found in config. Available: {available}", file=sys.stderr)
     sys.exit(1)
 
 

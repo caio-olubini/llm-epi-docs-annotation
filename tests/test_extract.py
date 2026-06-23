@@ -12,7 +12,7 @@ def make_config(extractor="pymupdf", max_chars=None):
         pdf=PdfCfg(extractor=extractor, max_chars=max_chars),
         models=[ModelCfg(name="m", provider="openai", model_id="gpt-4o")],
         run=RunCfg(),
-        prompt=PromptCfg(system_path="prompts/system.md"),
+        prompt=PromptCfg(active="v1", versions={"v1": "prompts/system.md"}),
     )
 
 

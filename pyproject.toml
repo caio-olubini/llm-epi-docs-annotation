@@ -17,6 +17,7 @@ dependencies = [
 
 [project.scripts]
 epi-annotate = "epi_annotation.cli:main"
+test = "epi_annotation._tasks:run_tests"
 
 [build-system]
 requires = ["hatchling"]

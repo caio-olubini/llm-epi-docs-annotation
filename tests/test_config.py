@@ -27,7 +27,9 @@ MINIMAL_CONFIG = """
       concurrency: 4
       output_dir: outputs/runs
     prompt:
-      system_path: prompts/system.md
+      active: v1
+      versions:
+        v1: prompts/system.md
 """
 
 
@@ -62,6 +64,21 @@ def test_load_config_exits_when_file_missing(tmp_path):
 
 def test_load_config_exits_on_invalid_provider(tmp_path):
     bad_config = MINIMAL_CONFIG.replace("provider: openai", "provider: invalid_provider")
+    path = write_config(tmp_path, bad_config)
+    with pytest.raises(SystemExit):
+        load_config(path)
+
+
+def test_load_config_resolves_active_prompt_to_its_path(tmp_path):
+    path = write_config(tmp_path, MINIMAL_CONFIG)
+    cfg = load_config(path)
+    assert cfg.prompt.active_path() == "prompts/system.md"
+
+
+def test_load_config_exits_when_active_prompt_names_unknown_version(tmp_path):
+    """An active version with no matching path would silently fall back to no
+    prompt at run time; the config must reject it up front instead."""
+    bad_config = MINIMAL_CONFIG.replace("active: v1", "active: v2")
     path = write_config(tmp_path, bad_config)
     with pytest.raises(SystemExit):
         load_config(path)

@@ -165,7 +165,7 @@ class Config(BaseModel):
     models: list[ModelCfg]    # name, provider, model_id, temperature=0.0, max_tokens: int | None,
                               #   input_cost_per_1k: float | None, output_cost_per_1k: float | None
     run: RunCfg               # max_retries: int = 3; concurrency: int = 4; output_dir: str = "outputs/runs"
-    prompt: PromptCfg         # system_path: str
+    prompt: PromptCfg         # active: str; versions: dict[str, str] (name -> path); active must be a known version
 def discover_documents(cfg: Config) -> list[Document]: ...   # {document_id, source_dir, path}
 
 # extract.py
@@ -232,7 +232,9 @@ run:
   output_dir: outputs/runs
 
 prompt:
-  system_path: src/epi_annotation/prompts/system.md
+  active: v1
+  versions:
+    v1: src/epi_annotation/prompts/system.md
 ```
 
 ## Dependencies
