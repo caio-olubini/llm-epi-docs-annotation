@@ -34,10 +34,13 @@ def build_client(model_cfg: ModelCfg) -> instructor.Instructor:
         api_key=api_key,
         base_url=PROVIDER_BASE_URL[model_cfg.provider],
     )
-    # JSON mode asks the model to emit the schema as JSON in the response body.
-    # The default TOOLS (function-calling) mode is unreliable on Gemini's
-    # OpenAI-compat endpoint for large nested schemas (MALFORMED_FUNCTION_CALL).
-    return instructor.from_openai(raw_client, mode=instructor.Mode.JSON_SCHEMA)
+    # TOOLS_STRICT enables constrained decoding via function-calling with strict: true —
+    # the model is constrained at the token level to emit parameters that match the
+    # schema exactly. Gemini's OpenAI-compat endpoint rejects strict tool calls
+    # (MALFORMED_FUNCTION_CALL), so we fall back to JSON_SCHEMA for Google.
+    if model_cfg.provider == "google":
+        return instructor.from_openai(raw_client, mode=instructor.Mode.JSON_SCHEMA)
+    return instructor.from_openai(raw_client, mode=instructor.Mode.TOOLS_STRICT)
 
 
 def _require_api_key(provider: str) -> str:

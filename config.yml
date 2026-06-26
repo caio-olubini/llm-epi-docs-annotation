@@ -29,6 +29,7 @@ run:
   output_dir: outputs/runs
 
 prompt:
-  active: v1
+  active: v2
   versions:
     v1: src/epi_annotation/prompts/system.md
+    v2: src/epi_annotation/prompts/system_v2.md
