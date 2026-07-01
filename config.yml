@@ -7,21 +7,37 @@ pdf:
   max_chars: 60000
 
 models:
-  - name: gpt-4.1-mini
+  - name: gpt-4.1-nano
     provider: openai
-    model_id: gpt-4.1-mini
+    model_id: gpt-4.1-nano
     temperature: 0
-    max_tokens: 4096
-    input_cost_per_1k: 0.005
-    output_cost_per_1k: 0.015
-  - name: claude-sonnet
-    provider: anthropic
-    model_id: claude-sonnet-4-6
+    mode: tools_strict
+    # max_tokens: 4096  # optional; omit to use provider default
+
+  - name: deepseek-v4-flash
+    provider: deepseek
+    model_id: deepseek-v4-flash
     temperature: 0
+    mode: json_mode
+    
   - name: gemini-flash-lite
     provider: google
     model_id: gemini-2.5-flash-lite
     temperature: 0
+    mode: json_schema_mode
+
+  - name: llama4-scout
+    provider: deepinfra
+    model_id: meta-llama/Llama-4-Scout-17B-16E-Instruct
+    temperature: 0
+    mode: tools_strict
+
+  - name: qwen3-32b
+    provider: deepinfra
+    model_id: Qwen/Qwen3-32B
+    max_tokens: 2048
+    temperature: 0
+    mode: json_schema_mode
 
 run:
   max_retries: 3
@@ -29,7 +45,8 @@ run:
   output_dir: outputs/runs
 
 prompt:
-  active: v2
+  active: v3
   versions:
     v1: src/epi_annotation/prompts/system.md
     v2: src/epi_annotation/prompts/system_v2.md
+    v3: src/epi_annotation/prompts/system_v3.md

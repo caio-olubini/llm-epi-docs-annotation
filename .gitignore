@@ -8,3 +8,6 @@ __pycache__/
 dist/
 *.egg-info/
 *.pdf
+
+# Working draft of the paper — not for sharing until ready
+article/

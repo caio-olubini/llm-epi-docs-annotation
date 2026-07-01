@@ -25,14 +25,17 @@ src/epi_annotation/
   __init__.py
   cli.py          # argparse entrypoint — all subcommands
   config.py       # Config Pydantic model, load_config(), discover_documents()
-  schema.py       # Disease/Trend/Severity/Serotype/Intervention enums, SignalRow, DocumentAnnotation
+  schema.py       # Disease/Trend/Concern/Serotype/Intervention enums, NationalSignal,
+                  #   TerritorySignal, SerotypeSignal, ActionSignal, DocumentAnnotation
   extract.py      # extract_text() — PyMuPDF/pdftotext + cache
-  models.py       # build_client() — instructor-wrapped OpenAI/Anthropic/Google clients
+  models.py       # build_client() — instructor-wrapped OpenAI-compatible clients
   annotate.py     # annotate() → AnnotateResult (annotation + token usage)
   fingerprint.py  # fingerprint_prompt() → PromptFingerprint (version + path + sha256)
   _tasks.py       # run_tests() — backs the `uv run test` script
   prompts/
-    system.md     # Portuguese system prompt (prompt version "v1") sent to every model
+    system.md     # v1 — original PT-BR system prompt
+    system_v2.md  # v2 — refined signal/noise calibration + 3 few-shot examples
+    system_v3.md  # v3 (active) — full schema prose + 4 richer few-shot examples (EXAMPLE INPUT/OUTPUT)
   # ledger.py     (T-007, pending)
   # runner.py     (T-008, pending)
 tests/
@@ -52,7 +55,7 @@ tests/
 | T-002 | done | `schema.py` — annotation contract |
 | T-003 | done | `config.py` — Config model + `load_config` + `discover_documents` |
 | T-004 | done | `extract.py` — PDF extraction + cache; `extract` CLI subcommand |
-| T-005 | done | `models.py` — `build_client` for OpenAI / Anthropic / Google |
+| T-005 | done | `models.py` — `build_client` for OpenAI-compatible providers (openai, anthropic, google, deepseek, deepinfra) |
 | T-006 | done | `annotate.py` — `annotate()` + `system.md` prompt |
 | T-007 | pending | `ledger.py` — run dirs, atomic writes, resume logic |
 | T-008 | pending | `runner.py` — grid execution, concurrency, continue-on-failure |
@@ -121,16 +124,36 @@ selects which one a run uses. `load_config` rejects an `active` that names no kn
 
 ```yaml
 prompt:
-  active: v1
+  active: v3
   versions:
     v1: src/epi_annotation/prompts/system.md
-    # v2: src/epi_annotation/prompts/system_v2.md
+    v2: src/epi_annotation/prompts/system_v2.md
+    v3: src/epi_annotation/prompts/system_v3.md
 ```
 
 `fingerprint.py:fingerprint_prompt(version, path)` returns the version name, path, and a
 sha256 of the prompt **content** — so editing a prompt in place without renaming the version
 is still detectable when comparing outputs. Every annotation output carries this fingerprint.
 `demo --prompt VERSION` overrides `prompt.active` for one-off comparisons.
+
+## Model config (`ModelCfg`)
+
+Each entry under `models:` in `config.yml` accepts these fields:
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `name` | str | yes | Friendly name used in output filenames and logs |
+| `provider` | str | yes | `openai` · `anthropic` · `google` · `deepseek` · `deepinfra` |
+| `model_id` | str | yes | Exact model string sent to the API |
+| `temperature` | float | no (default 0) | |
+| `mode` | str | **yes** | `instructor.Mode` value (e.g. `tools_strict`, `json_mode`, `json_schema_mode`). `build_client` exits with a clear error if absent or invalid. |
+| `max_tokens` | int | no | Passed as `max_tokens=` to the completion call when set; omit to use provider default. |
+| `input_cost_per_1k` | float | no | For cost accounting (not yet used by runner) |
+| `output_cost_per_1k` | float | no | For cost accounting (not yet used by runner) |
+
+All providers are reached via an `openai.OpenAI` client with `base_url` swapped — one code path,
+no per-provider SDK. `PROVIDER_BASE_URL` and `PROVIDER_KEY_ENV` in `models.py` are the only
+place to add a new provider.
 
 ## Key invariants (don't break these)
 
@@ -179,6 +202,8 @@ Copy `.env.example` → `.env` and fill in the keys you need:
 OPENAI_API_KEY=
 ANTHROPIC_API_KEY=
 GOOGLE_API_KEY=
+DEEPSEEK_KEY=
+DEEPINFRA_KEY=
 ```
 
 Only the providers you actually use need a key.

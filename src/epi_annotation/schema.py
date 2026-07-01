@@ -6,10 +6,10 @@ class Disease(str, Enum):
     dengue = "dengue"; chikungunya = "chikungunya"; zika = "zika"
 
 class Trend(str, Enum):  # direção narrativa afirmada pelo texto
-    decrease = "queda"; normal = "normal"; increase = "alta"
+    decrease = "queda"; normal = "normal"; increase = "alta"; not_reported = "nao_informado"
 
 class Concern(str, Enum):  # nível de preocupação/alarme afirmado pelo texto
-    low = "baixa"; normal = "normal"; high = "alta"; very_high = "muito_alta"
+    low = "baixa"; normal = "normal"; high = "alta"; very_high = "muito_alta"; not_reported = "nao_informado"
 
 class Serotype(str, Enum):
     denv1 = "DENV-1"; denv2 = "DENV-2"; denv3 = "DENV-3"; denv4 = "DENV-4"

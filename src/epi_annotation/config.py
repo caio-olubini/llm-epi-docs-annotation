@@ -20,9 +20,10 @@ class PdfCfg(BaseModel):
 
 class ModelCfg(BaseModel):
     name: str
-    provider: Literal["openai", "anthropic", "google"]
+    provider: Literal["openai", "anthropic", "google", "deepseek", "deepinfra"]
     model_id: str
     temperature: float = 0.0
+    mode: str | None = None
     max_tokens: int | None = None
     input_cost_per_1k: float | None = None
     output_cost_per_1k: float | None = None

@@ -35,7 +35,7 @@ Nunca calcule tendência a partir de números brutos: extraia o que o **texto af
 1. **Localize a narrativa.** Varra o documento e marque só os trechos em prosa que afirmam
    direção/preocupação/sorotipo/ação. Pule tabelas, gráficos e seções irrelevantes.
 2. **Liste os sinais** antes de pensar no formato: panorama nacional por doença; territórios
-   que o texto **destaca**; sorotipos; ações realizadas.
+   que o texto **destaca** (e que obrigatoriamente faz algum juizo de valor sobre tendência e preocupação); sorotipos; ações realizadas.
 3. **Só então preencha o schema.** Não invente sinal para preencher campo. Listas vazias são
    o resultado correto quando o texto não traz aquele sinal.
 
@@ -47,12 +47,14 @@ Nunca calcule tendência a partir de números brutos: extraia o que o **texto af
 - `alta`: magnitude ou gravidade da doença em tendência de alta/subida.
 - `queda`: magnitude menor que a referência, em ritmo decrescente.
 - `normal`: magnitude ou gravida dentro do esperado.
+- `nao_informado`: não informado / não foi possível inferir a tendência a partir do texto
 
 **concern** (preocupação afirmada)
 - `baixa`: texto demonstra baixa preocupação do ministério com a situação em questão dentro do território citado.
 - `normal`: rotina; "dentro do esperado"; sem destaque de alarme.
 - `alta`: Preocupação existente em nível elevado, não catastrófico, geralmente citando prioridade na tomada de ações.
 - `muito_alta`: preocupação máxima ou muito alta, uso de palavra como epidemia, pandemia ou emergência para se referir a situação. Texto demonstra preocupação extrema.
+- `nao_informado`: não informado / não foi possível qualificar o nível de preocupação a partir do texto
 
 **national vs. by_territory**
 - `national`: um sinal por doença em foco, lendo o panorama **nacional (Brasil)**.
